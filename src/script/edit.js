@@ -1,51 +1,39 @@
-import { notesData } from "../data/data.js";
-import saveDataToLocalStorage from "./save-data.js";
+import { archiveNote, unArchiveNote, getSingleNote } from '../data/dataApi'
 
 // Fungsi untuk mengedit catatan
-function editNote(id) {
-  const noteElement = document.querySelector(`.note[data-id="${id}"]`);
-  const title = noteElement.querySelector("h2").innerText;
-  const body = noteElement.querySelector("p").innerText;
-  Swal.fire({
-    title: "Edit Note",
-    html: `
-        <input id="editedTitle" class="swal2-input" value="${title}" placeholder="Title">
-        <textarea id="editedBody" class="swal2-textarea" placeholder="Note Body">${body}</textarea>
+async function archive(id) {
+    await archiveNote(id)
+}
+async function unarchive(id) {
+    await unArchiveNote(id)
+}
+async function editNote(id) {
+    const status = await getSingleNote(id)
+    console.log(status)
+    Swal.fire({
+        title: 'Edit Note',
+        html: `
+        <p>Apakah anda yakin ingin merubah status catatan?</p>
       `,
-    showCancelButton: true,
-    confirmButtonText: "Simpan",
-    showLoaderOnConfirm: true,
-    preConfirm: () => {
-      const editedTitle = document.getElementById("editedTitle").value;
-      const editedBody = document.getElementById("editedBody").value;
-      if (!editedTitle || !editedBody) {
-        Swal.showValidationMessage(
-          "Please enter both title and body for the note."
-        );
-      }
-      return { editedTitle: editedTitle, editedBody: editedBody };
-    },
-    allowOutsideClick: () => !Swal.isLoading(),
-  }).then((result) => {
-    if (result.isConfirmed) {
-      const editedTitle = result.value.editedTitle;
-      const editedBody = result.value.editedBody;
-      noteElement.querySelector("h2").innerText = editedTitle;
-      noteElement.querySelector("p").innerText = editedBody;
-      const noteIndex = notesData.findIndex((note) => note.id === id);
-      if (noteIndex !== -1) {
-        notesData[noteIndex].title = editedTitle;
-        notesData[noteIndex].body = editedBody;
-        saveDataToLocalStorage();
-      }
-      Swal.fire({
-        icon: "Berhasil!",
-        title: "Note Diperbarui!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-  });
+        showCancelButton: true,
+        confirmButtonText: 'Confirm',
+        showLoaderOnConfirm: true,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (status === false) {
+                archive(id)
+            } else {
+                unarchive(id)
+            }
+            Swal.fire({
+                icon: 'Berhasil!',
+                title: 'Note Diperbarui!',
+                showConfirmButton: false,
+                timer: 1500,
+            })
+            setTimeout(() => window.location.reload(), 1000)
+        }
+    })
 }
 
-export default editNote;
+export default editNote
